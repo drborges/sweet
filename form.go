@@ -3,9 +3,11 @@ package sweet
 import (
 	"net/http"
 	"net/url"
-	"strings"
 	"strconv"
+	"strings"
 )
+
+type Session map[string]string
 
 type Form struct {
 	client   *http.Client
@@ -28,14 +30,31 @@ func (form *Form) SetEndpoint(endpoint string) *Form {
 	return form
 }
 
-func (form *Form) Submit() (*http.Response, error) {
+func (form *Form) Submit() (*http.Response, Session, error) {
 	payload := form.Fields.Encode()
 	target := form.endpoint + form.Action
+
 	req, err := http.NewRequest(form.Method, target, strings.NewReader(payload))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
 	req.Header.Add("Content-Length", strconv.Itoa(len(payload)))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; param=value")
-	return form.client.Do(req)
+	resp, err := form.client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	url, err := url.Parse(target)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	session := make(Session)
+	for _, cookie := range form.client.Jar.Cookies(url) {
+		session[cookie.Name] = cookie.Value
+	}
+
+	return resp, session, err
 }

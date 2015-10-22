@@ -24,7 +24,33 @@ var (
 )
 
 func TestExtractFormFromReader(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).Select("#first-form").ExtractForm()
+	form, err := sweet.FromReader(strings.NewReader(page)).ExtractForm("#first-form")
+
+	if err != nil {
+		t.Errorf("Expected nil, got", err)
+	}
+
+	expectedFormAction := "/form1"
+	expectedFormMethod := "POST"
+	expectedFormBody := url.Values{}
+	expectedFormBody.Add("auth_token", "super_secret")
+	expectedFormBody.Add("user", "diego")
+
+	if form.Action != expectedFormAction {
+		t.Errorf("Expected %v, got %v", expectedFormAction, form.Action)
+	}
+
+	if form.Method != expectedFormMethod {
+		t.Errorf("Expected %v, got %v", expectedFormMethod, form.Method)
+	}
+
+	if !reflect.DeepEqual(form.Fields, expectedFormBody) {
+		t.Errorf("Expected %v, got %v", expectedFormBody, form.Fields)
+	}
+}
+
+func TestExtractFormFromString(t *testing.T) {
+	form, err := sweet.FromString(page).ExtractForm("#first-form")
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -50,7 +76,7 @@ func TestExtractFormFromReader(t *testing.T) {
 }
 
 func TestExtractFormFromURL(t *testing.T) {
-	form, err := sweet.FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
+	form, err := sweet.FromURL("https://github.com/login").ExtractForm(".auth-form form")
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -81,7 +107,7 @@ func TestExtractFormFromURL(t *testing.T) {
 }
 
 func TestExtractFormErrNotFound(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).Select("#not-existent").ExtractForm()
+	form, err := sweet.FromReader(strings.NewReader(page)).ExtractForm("#not-existent")
 
 	expectedErr := sweet.ErrNotFound{"#not-existent"}
 
@@ -95,7 +121,7 @@ func TestExtractFormErrNotFound(t *testing.T) {
 }
 
 func TestExtractFormErrEmptyForm(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).Select("#second-form").ExtractForm()
+	form, err := sweet.FromReader(strings.NewReader(page)).ExtractForm("#second-form")
 
 	expectedErr := sweet.ErrEmptyForm{"#second-form"}
 
@@ -109,7 +135,7 @@ func TestExtractFormErrEmptyForm(t *testing.T) {
 }
 
 func TestGithubLogin(t *testing.T) {
-	form, err := sweet.FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
+	form, err := sweet.FromURL("https://github.com/login").ExtractForm(".auth-form form")
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
 	}
@@ -117,20 +143,31 @@ func TestGithubLogin(t *testing.T) {
 	form.Fields.Set("login", "user")
 	form.Fields.Set("password", "pass")
 
-	resp, err := form.SetEndpoint("https://github.com").Submit()
+	_, session, err := form.SetEndpoint("https://github.com").Submit()
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
 	}
 
-	userSessionFound := false
+	if _, userSession := session["user_session"]; !userSession {
+		t.Error("Expected response to have cookie user_session")
+	}
+}
 
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name == "user_session" {
-			userSessionFound = true
-		}
+func TestTwitterLogin(t *testing.T) {
+	form, err := sweet.FromURL("https://twitter.com/login").ExtractForm("form.signin")
+	if err != nil {
+		t.Errorf("Expected nil, got", err)
 	}
 
-	if !userSessionFound {
-		t.Error("Expected response to have cookie user_session")
+	form.Fields.Set("session[username_or_email]", "user")
+	form.Fields.Set("session[password]", "pass")
+
+	_, session, err := form.Submit()
+	if err != nil {
+		t.Errorf("Expected nil, got", err)
+	}
+
+	if _, authTokenFound := session["auth_token"]; !authTokenFound {
+		t.Error("Expected response to have cookie auth_token")
 	}
 }

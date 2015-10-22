@@ -11,7 +11,6 @@ import (
 type Extractor struct {
 	client *http.Client
 	doc    *goquery.Document
-	sel    string
 	err    error
 }
 
@@ -36,6 +35,10 @@ func FromReader(r io.Reader) *Extractor {
 	return New().FromReader(r)
 }
 
+func FromString(html string) *Extractor {
+	return New().FromReader(strings.NewReader(html))
+}
+
 func (extractor *Extractor) EnableCookieJar() *Extractor {
 	jar, _ := cookiejar.New(nil)
 	extractor.client.Jar = jar
@@ -53,25 +56,19 @@ func (extractor *Extractor) FromURL(url string) *Extractor {
 		extractor.err = err
 		return extractor
 	}
-
 	extractor.doc, extractor.err = goquery.NewDocumentFromReader(resp.Body)
 	return extractor
 }
 
-func (extractor *Extractor) Select(selector string) *Extractor {
-	extractor.sel = selector
-	return extractor
-}
-
-func (extractor *Extractor) ExtractForm() (*Form, error) {
+func (extractor *Extractor) ExtractForm(sel string) (*Form, error) {
 	if extractor.err != nil {
 		return nil, extractor.err
 	}
 
-	selectedForms := extractor.doc.Find(extractor.sel)
+	selectedForms := extractor.doc.Find(sel)
 
 	if selectedForms.Size() == 0 {
-		return nil, ErrNotFound{extractor.sel}
+		return nil, ErrNotFound{sel}
 	}
 
 	formAction, _ := selectedForms.Attr("action")
@@ -81,7 +78,7 @@ func (extractor *Extractor) ExtractForm() (*Form, error) {
 	hiddenInputsSel := selectedForms.Find("input[type=hidden]")
 
 	if textInputsSel.Size() == 0 && hiddenInputsSel.Size() == 0 {
-		return nil, ErrEmptyForm{extractor.sel}
+		return nil, ErrEmptyForm{sel}
 	}
 
 	form := NewForm()
