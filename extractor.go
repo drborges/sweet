@@ -60,7 +60,7 @@ func (extractor *Extractor) FromURL(url string) *Extractor {
 	return extractor
 }
 
-func (extractor *Extractor) ExtractForm(sel string) (*Form, error) {
+func (extractor *Extractor) SelectForm(sel string) (*Form, error) {
 	if extractor.err != nil {
 		return nil, extractor.err
 	}

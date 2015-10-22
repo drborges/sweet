@@ -24,7 +24,7 @@ var (
 )
 
 func TestExtractFormFromReader(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).ExtractForm("#first-form")
+	form, err := sweet.FromReader(strings.NewReader(page)).SelectForm("#first-form")
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -50,7 +50,7 @@ func TestExtractFormFromReader(t *testing.T) {
 }
 
 func TestExtractFormFromString(t *testing.T) {
-	form, err := sweet.FromString(page).ExtractForm("#first-form")
+	form, err := sweet.FromString(page).SelectForm("#first-form")
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -76,7 +76,7 @@ func TestExtractFormFromString(t *testing.T) {
 }
 
 func TestExtractFormFromURL(t *testing.T) {
-	form, err := sweet.FromURL("https://github.com/login").ExtractForm(".auth-form form")
+	form, err := sweet.FromURL("https://github.com/login").SelectForm(".auth-form form")
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -107,7 +107,7 @@ func TestExtractFormFromURL(t *testing.T) {
 }
 
 func TestExtractFormErrNotFound(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).ExtractForm("#not-existent")
+	form, err := sweet.FromReader(strings.NewReader(page)).SelectForm("#not-existent")
 
 	expectedErr := sweet.ErrNotFound{"#not-existent"}
 
@@ -121,7 +121,7 @@ func TestExtractFormErrNotFound(t *testing.T) {
 }
 
 func TestExtractFormErrEmptyForm(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).ExtractForm("#second-form")
+	form, err := sweet.FromReader(strings.NewReader(page)).SelectForm("#second-form")
 
 	expectedErr := sweet.ErrEmptyForm{"#second-form"}
 
@@ -135,7 +135,7 @@ func TestExtractFormErrEmptyForm(t *testing.T) {
 }
 
 func TestGithubLogin(t *testing.T) {
-	form, err := sweet.FromURL("https://github.com/login").ExtractForm(".auth-form form")
+	form, err := sweet.FromURL("https://github.com/login").SelectForm(".auth-form form")
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
 	}
@@ -154,7 +154,7 @@ func TestGithubLogin(t *testing.T) {
 }
 
 func TestTwitterLogin(t *testing.T) {
-	form, err := sweet.FromURL("https://twitter.com/login").ExtractForm("form.signin")
+	form, err := sweet.FromURL("https://twitter.com/login").SelectForm("form.signin")
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
 	}
