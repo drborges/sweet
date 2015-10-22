@@ -4,6 +4,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
+	"strings"
 )
 
 type Extractor struct {
@@ -22,6 +24,12 @@ func New() *Extractor {
 func NewWithClient(client *http.Client) *Extractor {
 	extractor := New()
 	extractor.client = client
+	return extractor
+}
+
+func (extractor *Extractor) EnableCookieJar() *Extractor {
+	jar, _ := cookiejar.New(nil)
+	extractor.client.Jar = jar
 	return extractor
 }
 
@@ -68,7 +76,7 @@ func (extractor *Extractor) ExtractForm() (*Form, error) {
 	}
 
 	form := NewForm()
-	form.Method = formMethod
+	form.Method = strings.ToUpper(formMethod)
 	form.Action = formAction
 	form.client = extractor.client
 

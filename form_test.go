@@ -57,7 +57,7 @@ func TestExtractFormFromURL(t *testing.T) {
 	}
 
 	expectedFormAction := "/session"
-	expectedFormMethod := "post"
+	expectedFormMethod := "POST"
 
 	if form.Action != expectedFormAction {
 		t.Errorf("Expected %v, got %v", expectedFormAction, form.Action)
@@ -108,10 +108,29 @@ func TestExtractFormErrEmptyForm(t *testing.T) {
 	}
 }
 
-func TestFormSubmit(t *testing.T) {
-	form := sweet.NewForm()
-	form.Action = "/session"
-	form.Method = "POST"
+func TestGithubLogin(t *testing.T) {
+	form, err := sweet.New().EnableCookieJar().FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
+	if err != nil {
+		t.Errorf("Expected nil, got", err)
+	}
 
-	form.Submit()
+	form.Fields.Set("login", "user")
+	form.Fields.Set("password", "pass")
+
+	resp, err := form.SetEndpoint("https://github.com").Submit()
+	if err != nil {
+		t.Errorf("Expected nil, got", err)
+	}
+
+	userSessionFound := false
+
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "user_session" {
+			userSessionFound = true
+		}
+	}
+
+	if !userSessionFound {
+		t.Error("Expected response to have cookie user_session")
+	}
 }

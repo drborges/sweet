@@ -3,14 +3,16 @@ package sweet
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
 type Form struct {
-	client *http.Client
-	Action string
-	Method string
-	Fields url.Values
+	client   *http.Client
+	endpoint string
+	Action   string
+	Method   string
+	Fields   url.Values
 }
 
 func NewForm() *Form {
@@ -21,10 +23,19 @@ func NewForm() *Form {
 	}
 }
 
+func (form *Form) SetEndpoint(endpoint string) *Form {
+	form.endpoint = endpoint
+	return form
+}
+
 func (form *Form) Submit() (*http.Response, error) {
-	req, err := http.NewRequest(form.Method, form.Action, strings.NewReader(form.Fields.Encode()))
+	target := form.endpoint + form.Action
+	payload := form.Fields.Encode()
+	req, err := http.NewRequest(form.Method, target, strings.NewReader(payload))
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("Content-Length", strconv.Itoa(len(payload)))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; param=value")
 	return form.client.Do(req)
 }
