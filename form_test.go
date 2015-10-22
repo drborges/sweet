@@ -23,8 +23,8 @@ var (
 		</html>`
 )
 
-func TestExtractForm(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).Select("#first-form").ExtractForm()
+func TestExtractFormFromReader(t *testing.T) {
+	form, err := sweet.New().FromReader(strings.NewReader(page)).Select("#first-form").ExtractForm()
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -49,8 +49,39 @@ func TestExtractForm(t *testing.T) {
 	}
 }
 
+func TestExtractFormFromURL(t *testing.T) {
+	form, err := sweet.New().FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
+
+	if err != nil {
+		t.Errorf("Expected nil, got", err)
+	}
+
+	expectedFormAction := "/session"
+	expectedFormMethod := "post"
+
+	if form.Action != expectedFormAction {
+		t.Errorf("Expected %v, got %v", expectedFormAction, form.Action)
+	}
+
+	if form.Method != expectedFormMethod {
+		t.Errorf("Expected %v, got %v", expectedFormMethod, form.Method)
+	}
+
+	if form.Fields.Get("login") != "" {
+		t.Errorf("Expected empty, got %v", form.Fields.Get("login"))
+	}
+
+	if form.Fields.Get("password") != "" {
+		t.Errorf("Expected empty, got %v", form.Fields.Get("password"))
+	}
+
+	if form.Fields.Get("authenticity_token") == "" {
+		t.Errorf("Expected not empty")
+	}
+}
+
 func TestExtractFormErrNotFound(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).Select("#not-existent").ExtractForm()
+	form, err := sweet.New().FromReader(strings.NewReader(page)).Select("#not-existent").ExtractForm()
 
 	expectedErr := sweet.ErrNotFound{"#not-existent"}
 
@@ -64,7 +95,7 @@ func TestExtractFormErrNotFound(t *testing.T) {
 }
 
 func TestExtractFormErrEmptyForm(t *testing.T) {
-	form, err := sweet.FromReader(strings.NewReader(page)).Select("#second-form").ExtractForm()
+	form, err := sweet.New().FromReader(strings.NewReader(page)).Select("#second-form").ExtractForm()
 
 	expectedErr := sweet.ErrEmptyForm{"#second-form"}
 
