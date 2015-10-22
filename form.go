@@ -3,8 +3,8 @@ package sweet
 import (
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
+	"strconv"
 )
 
 type Form struct {
@@ -29,8 +29,8 @@ func (form *Form) SetEndpoint(endpoint string) *Form {
 }
 
 func (form *Form) Submit() (*http.Response, error) {
-	target := form.endpoint + form.Action
 	payload := form.Fields.Encode()
+	target := form.endpoint + form.Action
 	req, err := http.NewRequest(form.Method, target, strings.NewReader(payload))
 	if err != nil {
 		return nil, err

@@ -16,15 +16,24 @@ type Extractor struct {
 }
 
 func New() *Extractor {
-	return &Extractor{
+	extractor := &Extractor{
 		client: http.DefaultClient,
 	}
+	return extractor.EnableCookieJar()
 }
 
 func NewWithClient(client *http.Client) *Extractor {
 	extractor := New()
 	extractor.client = client
 	return extractor
+}
+
+func FromURL(url string) *Extractor {
+	return New().FromURL(url)
+}
+
+func FromReader(r io.Reader) *Extractor {
+	return New().FromReader(r)
 }
 
 func (extractor *Extractor) EnableCookieJar() *Extractor {

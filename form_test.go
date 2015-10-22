@@ -24,7 +24,7 @@ var (
 )
 
 func TestExtractFormFromReader(t *testing.T) {
-	form, err := sweet.New().FromReader(strings.NewReader(page)).Select("#first-form").ExtractForm()
+	form, err := sweet.FromReader(strings.NewReader(page)).Select("#first-form").ExtractForm()
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -50,7 +50,7 @@ func TestExtractFormFromReader(t *testing.T) {
 }
 
 func TestExtractFormFromURL(t *testing.T) {
-	form, err := sweet.New().FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
+	form, err := sweet.FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
 
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
@@ -81,7 +81,7 @@ func TestExtractFormFromURL(t *testing.T) {
 }
 
 func TestExtractFormErrNotFound(t *testing.T) {
-	form, err := sweet.New().FromReader(strings.NewReader(page)).Select("#not-existent").ExtractForm()
+	form, err := sweet.FromReader(strings.NewReader(page)).Select("#not-existent").ExtractForm()
 
 	expectedErr := sweet.ErrNotFound{"#not-existent"}
 
@@ -95,7 +95,7 @@ func TestExtractFormErrNotFound(t *testing.T) {
 }
 
 func TestExtractFormErrEmptyForm(t *testing.T) {
-	form, err := sweet.New().FromReader(strings.NewReader(page)).Select("#second-form").ExtractForm()
+	form, err := sweet.FromReader(strings.NewReader(page)).Select("#second-form").ExtractForm()
 
 	expectedErr := sweet.ErrEmptyForm{"#second-form"}
 
@@ -109,7 +109,7 @@ func TestExtractFormErrEmptyForm(t *testing.T) {
 }
 
 func TestGithubLogin(t *testing.T) {
-	form, err := sweet.New().EnableCookieJar().FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
+	form, err := sweet.FromURL("https://github.com/login").Select(".auth-form form").ExtractForm()
 	if err != nil {
 		t.Errorf("Expected nil, got", err)
 	}
